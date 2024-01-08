@@ -17,6 +17,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 import vg.civcraft.mc.civchat2.CivChat2;
 import vg.civcraft.mc.civchat2.CivChat2Manager;
+import vg.civcraft.mc.civchat2.database.CivChatDAO;
 import vg.civcraft.mc.civchat2.event.GlobalChatEvent;
 import vg.civcraft.mc.civchat2.utility.CivChat2SettingsManager;
 import vg.civcraft.mc.namelayer.GroupManager;
@@ -32,11 +33,13 @@ import vg.civcraft.mc.namelayer.permission.PermissionType;
 public class CivChat2Listener implements Listener {
 
 	private CivChat2Manager chatman;
+	private CivChatDAO db;
 	private CivChat2SettingsManager settings;
 	private Set<UUID> localWarn;
 
 	public CivChat2Listener(CivChat2Manager instance) {
 		chatman = instance;
+		db = CivChat2.getInstance().getDatabaseManager();
 		settings = CivChat2.getInstance().getCivChat2SettingsManager();
 		localWarn = new HashSet<>();
 	}
@@ -50,7 +53,7 @@ public class CivChat2Listener implements Listener {
 	public void onPlayerQuit(PlayerQuitEvent playerQuitEvent) {
 		playerQuitEvent.setQuitMessage(null);
 		for (Player p : Bukkit.getOnlinePlayers()){
-			if (settings.getShowLeaves(p.getUniqueId())){
+			if (settings.getShowLeaves(p.getUniqueId()) && !db.isIgnoringPlayer(p.getUniqueId(), playerQuitEvent.getPlayer().getUniqueId())){
 				if (playerQuitEvent.getPlayer().hasPermission("civchat2.leavejoinimmune")) {
 					continue;
 				}
@@ -65,7 +68,7 @@ public class CivChat2Listener implements Listener {
 			playerJoinEvent.setJoinMessage(null);
 		}
 		for (Player p : Bukkit.getOnlinePlayers()) {
-			if (settings.getShowJoins(p.getUniqueId())) {
+			if (settings.getShowJoins(p.getUniqueId()) && !db.isIgnoringPlayer(p.getUniqueId(), playerJoinEvent.getPlayer().getUniqueId())) {
 				if (playerJoinEvent.getPlayer().hasPermission("civchat2.leavejoinimmune")) {
 					continue;
 				}
